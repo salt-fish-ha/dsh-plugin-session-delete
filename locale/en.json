@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Session Delete",
+    "description": "Permanently delete a conversation from the sidebar, along with its log, cached projections and workspace entry."
+  }
+}
