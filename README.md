@@ -1,5 +1,7 @@
 # dsh-plugin-session-delete
 
+English | [中文](README.zh.md)
+
 **Permanently delete a conversation from the DSH sidebar.**
 
 DSH ships no session deletion: `@deepseek-ai/dsh-session-persistence` documents
@@ -34,14 +36,18 @@ accounting runs **before** the log is removed, because `sessionKnown` rebuilds f
 
 ## Safety
 
-- **Refuses a live session.** No supported API can stop a running session's owner, so the
-  plugin reports "close it first" instead of deleting files under a live writer.
+- **Stops running work instead of refusing.** An open conversation stays *resident* in the
+  session store even while idle, so refusing every resident session would block exactly the row
+  the user is looking at. The plugin asks DSH's own `workspace/session-activity` probe whether
+  work is running, calls `stopSessionActivity` when it is, and then evicts the in-memory
+  instances (`sessions` / `agents`) so nothing can re-create the log it is about to remove.
 - **Rejects hostile ids** — anything containing a path separator, control character, `.` or
   `..` is refused before touching the filesystem.
-- **Confirms before deleting**, and shows the Host's error text in the dialog on failure.
-- The panel is shown on every execution path (Host logic is covered by a self-test that
-  builds a throwaway store and asserts logs, cache rows, bystanders, refusal and traversal
-  guards).
+- **Confirms before deleting**, names the conversation in the dialog, and shows the Host's error
+  text on failure.
+- A behaviour self-test exercises all of it against a throwaway store: an idle conversation, a
+  busy one, bystander conversations, hostile ids, and a composition without the optional
+  services.
 
 ## Installing and updating
 
@@ -117,6 +123,7 @@ cp package.json cordis.patch.yml README.md LICENSE /tmp/stage/package/
 cp -r lib locale /tmp/stage/package/
 tar -czf dsh-plugin-session-delete-0.1.0.tgz -C /tmp/stage package
 ```
+
 ## Not covered
 
 - **Attachments.** `<DSH home>/attachments/v1/objects/…` is content-addressed and shared
